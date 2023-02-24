@@ -603,24 +603,42 @@ $('.view_order').click(function() {
   const data_months = <?php echo json_encode($orders_arr); ?>;
 
   const ctx = document.getElementById('myChart');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      // labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      labels: <?php echo json_encode($dates); ?>,
-      datasets: [{
-        label: `Daily Sales | Month of ${months[month]} | Week ${weekOfMonth}`,
-        data: data_months,
-        borderWidth: 1,
-        backgroundColor: colors,
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
+  // new Chart(ctx, {
+  //   type: 'bar',
+  //   data: {
+  //     // labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  //     labels: <?php echo json_encode($dates); ?>,
+  //     datasets: [{
+  //       label: `Daily Sales | Month of ${months[month]} | Week ${weekOfMonth}`,
+  //       data: data_months,
+  //       borderWidth: 1,
+  //       backgroundColor: colors,
+  //     }]
+  //   },
+  //   options: {
+  //     scales: {
+  //       y: {
+  //         beginAtZero: true
+  //       }
+  //     }
+  //   }
+  // });
+  
+  const data = {
+    labels: <?php echo json_encode($dates); ?>,
+    datasets: [{
+      label: `Daily Sales | Month of ${months[month]} | Week ${weekOfMonth}`,
+      data: data_months,
+      fill: false,
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
+    }]
+  };
+
+  const config = {
+    type: 'line',
+    data: data,
+  };
+
+  new Chart(ctx, config)
 </script>
