@@ -19,56 +19,28 @@
 	$resultDeliveredOrders = $conn->query("SELECT * FROM orders WHERE status = 5");
 	$row_cnt_delivered_orders = $resultDeliveredOrders->num_rows;
 
+  $orders_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   $curr_year = date("Y");
-  $months = array("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
+  
+  for ($x = 1; $x <= 12; $x++) {
+    $order_sql = "SELECT * FROM orders WHERE status = 5 AND YEAR(order_date)='$curr_year' AND MONTH(order_date)=$x";
+    if($order_result = $conn->query($order_sql)){
+      $total_orders = 0;
 
-  $first_day = date('Y-m-01 H:i:s', strtotime("January $curr_year"));
-  $January_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$January_orders_count = $January_orders->num_rows;
+      if($order_result->num_rows > 0){
+        while($order_row = $order_result->fetch_array()){
+          $orderList_sql = "SELECT * FROM order_list INNER JOIN product_list ON product_list.id = order_list.product_id WHERE order_list.order_id = ".$order_row['id'];
+          if($orderList_result = $conn->query($orderList_sql)){
+            while($orderList_row = $orderList_result->fetch_array()){
+              $total_orders += $orderList_row['qty']*$orderList_row['price'];
+            }
+          }
+        }
+      }
 
-  $first_day = date('Y-m-01 H:i:s', strtotime("February $curr_year"));
-  $February_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$February_orders_count = $February_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("March $curr_year"));
-  $March_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$March_orders_count = $March_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("April $curr_year"));
-  $April_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$April_orders_count = $April_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("May $curr_year"));
-  $May_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$May_orders_count = $May_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("June $curr_year"));
-  $June_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$June_orders_count = $June_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("July $curr_year"));
-  $July_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$July_orders_count = $July_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("August $curr_year"));
-  $August_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$August_orders_count = $August_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("September $curr_year"));
-  $September_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$September_orders_count = $September_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("October $curr_year"));
-  $October_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$October_orders_count = $October_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("November $curr_year"));
-  $November_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$November_orders_count = $November_orders->num_rows;
-
-  $first_day = date('Y-m-01 H:i:s', strtotime("December $curr_year"));
-  $December_orders = $conn->query("SELECT * FROM orders WHERE status = 5 AND order_date BETWEEN  '$first_day' AND LAST_DAY('$first_day')");
-	$December_orders_count = $December_orders->num_rows;
+      $orders_arr[$x-1] = $total_orders;
+    }
+  }
 ?>
 <style>
     .home-content .overview-boxes{
@@ -589,32 +561,19 @@ $('.view_order').click(function() {
 </script>
 <script src="assets/js/chart.js"></script>
 <script> 
-  const ctx = document.getElementById('myChart');
+  const colors = ['#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6', '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D', '#80B300', '#809900'];
+  const data_months = <?php echo json_encode($orders_arr); ?>;
 
+  const ctx = document.getElementById('myChart');
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
       datasets: [{
-        label: 'Monthly Orders ' + new Date().getFullYear(),
-        data: ['<?php echo $January_orders_count ?>', '<?php echo $February_orders_count ?>', '<?php echo $March_orders_count ?>', '<?php echo $April_orders_count ?>', '<?php echo $May_orders_count ?>', '<?php echo $June_orders_count ?>', '<?php echo $July_orders_count ?>', '<?php echo $August_orders_count ?>', '<?php echo $September_orders_count ?>', '<?php echo $October_orders_count ?>', '<?php echo $November_orders_count ?>', '<?php echo $December_orders_count ?>'],
+        label: 'Monthly Sales ' + new Date().getFullYear(),
+        data: data_months,
         borderWidth: 1,
-        backgroundColor: [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(255, 159, 64, 0.2)',
-        'rgba(255, 205, 86, 0.2)',
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(153, 102, 255, 0.2)'
-        ],
-        borderColor: [
-        'rgb(255, 99, 132)',
-        'rgb(255, 159, 64)',
-        'rgb(255, 205, 86)',
-        'rgb(75, 192, 192)',
-        'rgb(54, 162, 235)',
-        'rgb(153, 102, 255)'
-        ],
+        backgroundColor: colors,
       }]
     },
     options: {
