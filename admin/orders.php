@@ -19,11 +19,41 @@
 	$resultDeliveredOrders = $conn->query("SELECT * FROM orders WHERE status = 5");
 	$row_cnt_delivered_orders = $resultDeliveredOrders->num_rows;
 
-  $orders_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  // $orders_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   $curr_year = date("Y");
   
-  for ($x = 1; $x <= 12; $x++) {
-    $order_sql = "SELECT * FROM orders WHERE status = 5 AND YEAR(order_date)='$curr_year' AND MONTH(order_date)=$x";
+  // for ($x = 1; $x <= 12; $x++) {
+  //   $order_sql = "SELECT * FROM orders WHERE status = 5 AND YEAR(order_date)='$curr_year' AND MONTH(order_date)=$x";
+  //   if($order_result = $conn->query($order_sql)){
+  //     $total_orders = 0;
+
+  //     if($order_result->num_rows > 0){
+  //       while($order_row = $order_result->fetch_array()){
+  //         $orderList_sql = "SELECT * FROM order_list INNER JOIN product_list ON product_list.id = order_list.product_id WHERE order_list.order_id = ".$order_row['id'];
+  //         if($orderList_result = $conn->query($orderList_sql)){
+  //           while($orderList_row = $orderList_result->fetch_array()){
+  //             $total_orders += $orderList_row['qty']*$orderList_row['price'];
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     $orders_arr[$x-1] = $total_orders;
+  //   }
+  // }
+
+  $orders_arr = [0, 0, 0, 0, 0, 0, 0];
+  $dt = new DateTime();
+  $dates = [];
+  for ($d = 1; $d <= 7; $d++) {
+      $dt->setISODate($dt->format('o'), $dt->format('W'), $d);
+      // $dates[$dt->format('D')] = $dt->format('m-d-Y');
+      array_push($dates, $dt->format('Y-m-d'));
+  }
+  //print_r($dates);
+
+  for ($x = 0; $x < count($dates); $x++) {
+    $order_sql = "SELECT * FROM orders WHERE status = 5 AND DATE(order_date) = '$dates[$x]'";
     if($order_result = $conn->query($order_sql)){
       $total_orders = 0;
 
@@ -38,7 +68,7 @@
         }
       }
 
-      $orders_arr[$x-1] = $total_orders;
+      $orders_arr[$x] = $total_orders;
     }
   }
 ?>
@@ -561,6 +591,14 @@ $('.view_order').click(function() {
 </script>
 <script src="assets/js/chart.js"></script>
 <script> 
+  const d = new Date();
+  const date = d.getDate();
+  const day = d.getDay();
+  const month = d.getMonth();
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  const weekOfMonth = Math.ceil((date - 1 - day) / 7);
+
   const colors = ['#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6', '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D', '#80B300', '#809900'];
   const data_months = <?php echo json_encode($orders_arr); ?>;
 
@@ -568,9 +606,10 @@ $('.view_order').click(function() {
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      // labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      labels: <?php echo json_encode($dates); ?>,
       datasets: [{
-        label: 'Monthly Sales ' + new Date().getFullYear(),
+        label: `Daily Sales | Month of ${months[month]} | Week ${weekOfMonth}`,
         data: data_months,
         borderWidth: 1,
         backgroundColor: colors,
